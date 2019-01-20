@@ -15,8 +15,8 @@ def create_contract(symbol: str, currency: Currencies, exchange: Exchanges, sec_
 
 def create_order(action: OrderActions, quantity: float, order_type: OrderTypes, limit_price: float = -1.0) -> Order:
     order = Order()
-    order.action = action
-    order.orderType = order_type
+    order.action = action.value
+    order.orderType = order_type.value
     order.totalQuantity = quantity
 
     if limit_price != -1.0:

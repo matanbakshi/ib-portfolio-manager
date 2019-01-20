@@ -10,13 +10,9 @@ class BaseBrokerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_all_holdings(self):
+    def request_all_holdings(self):
         pass
 
-    @abstractmethod
-    def get_holding_by_symbol(self, symbol: str, exchange: Exchanges):
-        pass
-
-    @abstractmethod
-    def get_all_pending_orders(self):
-        pass
+    # @abstractmethod TODO: Implement if necessary in the future
+    # def request_all_pending_orders(self):
+    #     pass

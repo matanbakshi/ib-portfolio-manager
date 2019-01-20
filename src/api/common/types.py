@@ -32,3 +32,14 @@ class PositionData:
 
     def __repr__(self):
         return f"{self.symbol} - {self.pos} {self.currency}"
+
+
+class OrderStatus:
+    def __init__(self, order_id: int, status: str, filled: float, remaining: float):
+        self.order_id = order_id
+        self.status = status
+        self.filled = filled
+        self.remaining = remaining
+
+    def __repr__(self):
+        return f"OID: {self.order_id} - Status: {self.status} Filled: {self.filled} Remaining: {self.remaining}"
