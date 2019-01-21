@@ -6,6 +6,7 @@ from ibapi.order_state import OrderState
 
 from src.api.common.types import *
 from src.api.ib.IBEventsHandler import IBEventsHandler
+from src.api.ib.ib_entities import AccountSummary
 
 
 class IBWrapper(wrapper.EWrapper):
@@ -39,6 +40,15 @@ class IBWrapper(wrapper.EWrapper):
                             avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice)
 
         self._event_handler.new_open_order_callback(OrderStatus(orderId, status, filled, remaining))
+
+    def accountSummary(self, reqId: int, account: str, tag: str, value: str,
+                       currency: str):
+        super().accountSummary(reqId, account, tag, value, currency)
+        self._event_handler.account_summary_callback(AccountSummary(reqId, account, tag, value, currency))
+
+    def accountSummaryEnd(self, reqId: int):
+        super().accountSummaryEnd(reqId)
+        self._event_handler.account_summary_end()
 
 
 class IBClient(EClient):

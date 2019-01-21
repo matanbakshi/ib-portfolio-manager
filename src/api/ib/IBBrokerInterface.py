@@ -1,5 +1,7 @@
 from pprint import pprint
 from threading import Thread, Event
+from typing import List
+from ibapi.account_summary_tags import AccountSummaryTags
 
 from src.api.common.BaseBrokerInterface import BaseBrokerInterface
 
@@ -16,7 +18,8 @@ class IBBrokerInterface(BaseBrokerInterface):
         self._last_oid = None
         self._event_handler = IBEventsHandler()
         self._event_handler.next_valid_oid_callback = self._next_valid_id_response
-        self._event_handler.position_end_callback = self._positions_end_callback
+        self._event_handler.position_end_callback = self._set_sync_event
+        self._event_handler.account_summary_end = self._set_sync_event
 
         self._ibApp = IBApp(self._event_handler)
         self._ibApp.connect(hostname, port, 0)
@@ -25,58 +28,70 @@ class IBBrokerInterface(BaseBrokerInterface):
         self.start = thread.start()
         setattr(self._ibApp, "_thread", thread)
 
-        self._req_oid_wait_handle = Event()
+        self._sync_event = Event()
         self._request_next_oid_and_wait()
-
-        self._req_positions_wait_handle = Event()
 
     def place_single_order(self, symbol: str, quantity: float, order_type: OrderTypes, action: OrderActions,
                            sec_type: SecTypes, currency: Currencies, exchange: Exchanges, limit_price: float = -1.0):
-        # TODO: support multiple orders, grouping and enabling "One-Cancels All"
         order = create_order(action, quantity, order_type, limit_price)
         contract = create_contract(symbol, currency, exchange, sec_type)
 
         self._ibApp.placeOrder(self._last_oid, contract, order)
         self._last_oid += 1
 
-    def request_all_holdings(self):
+    def request_all_holdings(self) -> List[PositionData]:
         all_positions = []
         self._event_handler.new_position_callback = lambda pos: all_positions.append(pos)
         self._ibApp.reqPositions()
 
-        event_set = self._req_positions_wait_handle.wait(API_TIMEOUT)
+        event_set = self._sync_event.wait(API_TIMEOUT)
         if not event_set:
-            raise ConnectionError(f"The API call to request holding timed out after {API_TIMEOUT} "
-                                  f"seconds")
+            raise ConnectionError(f"The API call to request holding timed out after {API_TIMEOUT} seconds")
 
         return all_positions
 
-    def _positions_end_callback(self):
-        self._req_positions_wait_handle.set()
-        self._req_positions_wait_handle.clear()
+    def request_cash_balance(self) -> float:
+        acc_summary_list = []
+        self._event_handler.account_summary_callback = lambda acc_sum: acc_summary_list.append(acc_sum)
+        ib._ibApp.reqAccountSummary(9008, "All", AccountSummaryTags.TotalCashValue)
 
-    # def request_all_pending_orders(self): TODO: Implement if necessary in the future
-    #     self._ibApp.reqOpenOrders()
+        event_set = self._sync_event.wait(API_TIMEOUT)
+        if not event_set:
+            raise ConnectionError(f"The API call to request cash balance timed out after {API_TIMEOUT} seconds")
+
+        cash_balance = next(
+            acc_sum.value for acc_sum in acc_summary_list if acc_sum.tag == AccountSummaryTags.TotalCashValue)
+
+        return cash_balance
+
+    def _set_sync_event(self):
+        self._sync_event.set()
+        self._sync_event.clear()
 
     def _request_next_oid_and_wait(self):
         self._ibApp.reqIds(-1)  # The parameter is ignored (according to IB API)
-        event_set = self._req_oid_wait_handle.wait(API_TIMEOUT)
+        event_set = self._sync_event.wait(API_TIMEOUT)
         if not event_set or self._last_oid is None:
             raise ConnectionError("The next valid order ID wasn't received from the "
                                   f"IB API and timed out ({API_TIMEOUT} second(s)) "
                                   f"or there was no callback assigned to it.")
 
-        self._req_oid_wait_handle.clear()
+        self._sync_event.clear()
 
     def _next_valid_id_response(self, oid):
         self._last_oid = oid
-        self._req_oid_wait_handle.set()
+
+        self._set_sync_event()
 
 
 if __name__ == "__main__":
     ib = IBBrokerInterface()
-    result = ib.request_all_holdings()
-    pprint(result)
+
+    # ib._ibApp.reqAccountSummary(9008, "All", AccountSummaryTags.TotalCashValue)
+    balance = ib.request_cash_balance()
+    print(balance)
+    # result = ib.request_all_holdings()
+    # pprint(result)
 
     # ib.place_single_order("IBKR", 1, OrderTypes.LIMIT, OrderActions.BUY_ORDER, SecTypes.STOCK, Currencies.USD,
     #                       Exchanges.NASDAQ_EXCHANGE, limit_price=200)

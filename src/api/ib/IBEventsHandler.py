@@ -8,3 +8,6 @@ class IBEventsHandler:
         self.position_end_callback = lambda: None
 
         self.next_valid_oid_callback = lambda oid: None
+
+        self.account_summary_callback = lambda acc_summary: None
+        self.account_summary_end = lambda reqId: None
