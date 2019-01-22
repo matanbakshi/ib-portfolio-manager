@@ -1,5 +1,6 @@
 from pprint import pprint
 from threading import Thread, Event
+from src.tools.sync_helpers import wait_for_all_events
 from typing import List
 from ibapi.account_summary_tags import AccountSummaryTags
 
@@ -10,7 +11,9 @@ from src.api.common.types import *
 from src.api.ib.ib_app_objects import IBApp
 from src.api.ib.IBEventsHandler import IBEventsHandler
 
-API_TIMEOUT = 5.0
+CONSTANT_ID = 9008
+
+API_TIMEOUT = 15.0
 
 
 class IBBrokerInterface(BaseBrokerInterface):
@@ -52,10 +55,25 @@ class IBBrokerInterface(BaseBrokerInterface):
 
     def request_cash_balance(self) -> float:
         acc_summary_list = []
-        self._event_handler.account_summary_callback = lambda acc_sum: acc_summary_list.append(acc_sum)
-        ib._ibApp.reqAccountSummary(9008, "All", AccountSummaryTags.TotalCashValue)
 
-        event_set = self._sync_event.wait(API_TIMEOUT)
+        # The IB API has a race condition and sends the END message before the account summary message. Therefore,
+        # I added another wait mechanism here that will fire on the first account summary callback,
+        # and wait for both events.
+        # TODO: This race condition occurred when only one tag was requested,
+        #  it might also happen in other places (like requesting positions). Check this in the future.
+        data_received_wait_event = Event()
+
+        def _account_summary_callback(acc_sum):
+            acc_summary_list.append(acc_sum)
+            data_received_wait_event.set()
+
+        self._event_handler.account_summary_callback = _account_summary_callback
+
+        # Currently I send only const ID because it doesn't have any meaning except for tagging, might be
+        # interesting in the future.
+        ib._ibApp.reqAccountSummary(CONSTANT_ID, "All", AccountSummaryTags.TotalCashValue)
+
+        event_set = wait_for_all_events([self._sync_event, data_received_wait_event], API_TIMEOUT)
         if not event_set:
             raise ConnectionError(f"The API call to request cash balance timed out after {API_TIMEOUT} seconds")
 
