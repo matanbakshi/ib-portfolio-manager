@@ -25,7 +25,8 @@ class Currencies(Enum):
 
 
 class PositionData:
-    def __init__(self, symbol, currency, pos):
+    def __init__(self, symbol, currency, pos, avg_cost):
+        self.avg_cost = avg_cost
         self.pos = pos
         self.currency = currency
         self.symbol = symbol

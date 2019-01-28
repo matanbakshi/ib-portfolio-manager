@@ -6,7 +6,7 @@ from ibapi.order_state import OrderState
 
 from src.api.common.types import *
 from src.api.ib.IBEventsHandler import IBEventsHandler
-from src.api.ib.ib_entities import AccountSummary
+from src.api.ib.ib_custom_entities import AccountSummary
 
 
 class IBWrapper(wrapper.EWrapper):
@@ -22,7 +22,7 @@ class IBWrapper(wrapper.EWrapper):
                  avgCost: float):
         super().position(account, contract, position, avgCost)
 
-        self._event_handler.new_position_callback(PositionData(contract.symbol, contract.currency, position))
+        self._event_handler.new_position_callback(PositionData(contract.symbol, contract.currency, position, avgCost))
 
     def positionEnd(self):
         self._event_handler.position_end_callback()
