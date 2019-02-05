@@ -1,5 +1,4 @@
 from ibapi.contract import Contract
-from src.api.common.types import *
 from ibapi.order import Order
 
 

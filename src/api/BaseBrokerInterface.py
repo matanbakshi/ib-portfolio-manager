@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from src.api.common.types import *
-
 
 class BaseBrokerInterface(ABC):
     @abstractmethod

@@ -1,6 +1,6 @@
 from typing import Dict
 
-from src.api.common.BaseBrokerInterface import BaseBrokerInterface
+from src.api.BaseBrokerInterface import BaseBrokerInterface
 
 
 class PassiveInvestmentLogic:
