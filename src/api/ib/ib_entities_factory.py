@@ -1,6 +1,8 @@
 from ibapi.contract import Contract
 from ibapi.order import Order
 
+from src.api.types import *
+
 
 def create_contract(symbol: str, currency: Currencies, exchange: Exchanges, sec_type: SecTypes) -> Contract:
     contract = Contract()
