@@ -4,8 +4,8 @@ from ibapi.contract import Contract
 from ibapi.order import Order
 from ibapi.order_state import OrderState
 
-from src.api.ib.IBEventsHandler import IBEventsHandler
-from src.api.ib.ib_custom_entities import AccountSummary
+from src.api.ib_nativeapi.IBEventsHandler import IBEventsHandler
+from src.api.ib_nativeapi.ib_custom_entities import AccountSummary
 
 
 class IBWrapper(wrapper.EWrapper):

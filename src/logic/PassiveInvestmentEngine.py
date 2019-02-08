@@ -6,14 +6,11 @@ class PassiveInvestmentEngine:
     def __init__(self, broker_interface: BaseBrokerInterface):
         self._broker_interface = broker_interface
 
-    def run_logic(self):
-        # Check available cash
+    def rebalance_with_available_cash(self):
+        cash_balance = self._broker_interface.request_cash_balance()
 
-        # Get current positions
+        tradable_holdings = self._broker_interface.request_all_holdings()
 
         # Group to different assets
 
         pass
-
-    def _get_available_cash(self):
-        self._broker_interface.request_cash_balance()

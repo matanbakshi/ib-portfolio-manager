@@ -5,9 +5,9 @@ from ibapi.account_summary_tags import AccountSummaryTags
 
 from src.api.BaseBrokerInterface import BaseBrokerInterface
 
-from src.api.ib.ib_entities_factory import *
-from src.api.ib.ib_app_objects import IBApp
-from src.api.ib.IBEventsHandler import IBEventsHandler
+from src.api.ib_nativeapi.ib_entities_factory import *
+from src.api.ib_nativeapi.ib_app_objects import IBApp
+from src.api.ib_nativeapi.IBEventsHandler import IBEventsHandler
 
 CONSTANT_ID = 9008
 
@@ -103,13 +103,13 @@ class IBBrokerInterface(BaseBrokerInterface):
 if __name__ == "__main__":
     ib = IBBrokerInterface()
 
-    # ib._ibApp.reqAccountSummary(9008, "All", AccountSummaryTags.TotalCashValue)
+    # ib_nativeapi._ibApp.reqAccountSummary(9008, "All", AccountSummaryTags.TotalCashValue)
     balance = ib.request_cash_balance()
     print(balance)
-    # result = ib.request_all_holdings()
+    # result = ib_nativeapi.request_all_holdings()
     # pprint(result)
 
-    # ib.place_single_order("IBKR", 1, OrderTypes.LIMIT, OrderActions.BUY_ORDER, SecTypes.STOCK, Currencies.USD,
+    # ib_nativeapi.place_single_order("IBKR", 1, OrderTypes.LIMIT, OrderActions.BUY_ORDER, SecTypes.STOCK, Currencies.USD,
     #                       Exchanges.NASDAQ_EXCHANGE, limit_price=200)
     #
     input()
