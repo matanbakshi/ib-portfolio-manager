@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from src.api.types import *
 
@@ -10,12 +11,13 @@ class BaseBrokerInterface(ABC):
         pass
 
     @abstractmethod
-    def request_all_holdings(self):
+    def request_all_holdings(self) -> List[PositionData]:
         pass
 
     @abstractmethod
     def request_cash_balance(self) -> float:
         pass
+
     # @abstractmethod TODO: Implement if necessary in the future
     # def request_all_pending_orders(self):
     #     pass

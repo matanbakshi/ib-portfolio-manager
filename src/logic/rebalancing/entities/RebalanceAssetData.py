@@ -2,8 +2,9 @@ from src.common.ClassificationTypes import Asset
 
 
 class RebalanceAssetData:
-    def __init__(self, asset_object: Asset, value, actual_allocation=None, target_value=None, deviation=None,
+    def __init__(self, asset_object: Asset, value: float, actual_allocation=None, target_value=None, deviation=None,
                  delta=None):
+        # self.is_tradable = is_tradable
         self.delta = delta
         self.deviation = deviation
         self.target_value = target_value

@@ -1,5 +1,47 @@
 from src.common.ClassificationTypes import *
 
+# POSITIONS_MAPPINGS = {
+#     AssetTypes.Stocks: {
+#         MarketTypes.Developed: {
+#             "VEA": True,
+#             "CSSPX": True
+#         },
+#         MarketTypes.Emerging: {
+#             "EIMI_IRA": False
+#         },
+#         MarketTypes.General: {
+#             "InvProvident_Stocks": False,
+#             "Pension_Stocks": False
+#         }
+#     },
+#     AssetTypes.Bonds: {
+#         MarketTypes.General: {
+#             "AGGU": True,
+#         }
+#     },
+#     AssetTypes.REIT: {
+#         MarketTypes.Developed: {
+#             "VNQ": True,
+#             "VNQI": True
+#         }
+#     }
+# }
+
+# POSITIONS_MAPPINGS = {
+#     # IB Assets
+#     "VEA": PositionMapping(AssetTypes.Stocks, MarketTypes.Developed),
+#     "CSSPX": PositionMapping(AssetTypes.Stocks, MarketTypes.Developed),
+#     "AGGU": PositionMapping(AssetTypes.Bonds, MarketTypes.General),
+#     "VNQ": PositionMapping(AssetTypes.REIT, MarketTypes.Developed),
+#     "VNQI": PositionMapping(AssetTypes.REIT, MarketTypes.Developed),
+#
+#     # Non-IB Assets
+#     "EIMI_IRA": PositionMapping(AssetTypes.Stocks, MarketTypes.Emerging, is_tradable=False),
+#     "InvProvident_Stocks": PositionMapping(AssetTypes.Stocks, MarketTypes.General, is_tradable=False),
+#     "InvProvident_Bonds": PositionMapping(AssetTypes.Bonds, MarketTypes.General, is_tradable=False),
+#     "Pension_Stocks": PositionMapping(AssetTypes.Stocks, MarketTypes.General, is_tradable=False),
+# }
+
 POSITIONS_MAPPINGS = [
     # IB Assets
     PositionMapping("VEA", AssetTypes.Stocks, MarketTypes.Developed),

@@ -32,9 +32,15 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
             payload["price"] = limit_price
 
         res = requests.post(f"{API_URL}/iserver/account/{IB_ACC_ID}/order", data=payload, verify=False)
+        jres = json.loads(res.content)
+
+        # handle response...
 
     def request_all_holdings(self):
-        pass
+        pageId = 0  # understand if this necessary
+
+        res = requests.get(f"{API_URL}/portal/portfolio/{IB_ACC_ID}/positions/{pageId}")
+        jres = json.loads(res.content)
 
     def request_cash_balance(self) -> float:
         res = requests.get(f"{API_URL}/portfolio/{IB_ACC_ID}/ledger", verify=False)
