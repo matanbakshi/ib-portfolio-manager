@@ -13,7 +13,10 @@ class OrderTypes(Enum):
 
 class Exchanges(Enum):
     # In the IB API side, NASDAQ is always defined as ISLAND in the exchange field (TODO: take this to somewhere else)
-    NASDAQ_EXCHANGE = "ISLAND"
+    NASDAQ = "NASDAQ",
+    ARCA = "ARCA",
+    LSE = "LSE",
+    NYSE = "NYSE"
 
 
 class SecTypes(Enum):
@@ -24,15 +27,28 @@ class Currencies(Enum):
     USD = "USD"
 
 
+class MarketData:
+    def __init__(self, ask_price: float, ask_size: int, bid_price: float, bid_size: int):
+        self.ask_price = ask_price
+        self.ask_size = ask_size
+        self.bid_price = bid_price
+        self.bid_size = bid_size
+
+
 class PositionData:
-    def __init__(self, symbol, currency, pos, avg_cost):
-        self.avg_cost = avg_cost
-        self.pos = pos
+    def __init__(self, symbol: str, currency: Currencies, quantity: float, market_price: float, exchange: Exchanges):
+        self.exchange = exchange
+        self.market_price = market_price
+        self.quantity = quantity
         self.currency = currency
         self.symbol = symbol
 
     def __repr__(self):
-        return f"{self.symbol} - {self.pos} {self.currency}"
+        return f"{self.symbol} - {self.quantity} {self.currency}"
+
+    @property
+    def market_value(self):
+        return self.market_price * self.quantity
 
 
 class OrderStatus:

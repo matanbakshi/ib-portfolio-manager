@@ -9,7 +9,6 @@ CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
 
 
 class IBRESTBrokerInterface(BaseBrokerInterface):
-
     def place_single_order(self, symbol: str, quantity: float, order_type: OrderTypes, action: OrderActions,
                            sec_type: SecTypes, currency: Currencies, exchange: Exchanges, limit_price: float = -1.0):
         # TODO: finish after receiving answer for the "conid" parameter

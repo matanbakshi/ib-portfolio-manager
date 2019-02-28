@@ -44,11 +44,11 @@ from src.common.ClassificationTypes import *
 
 POSITIONS_MAPPINGS = [
     # IB Assets
-    PositionMapping("VEA", AssetTypes.Stocks, MarketTypes.Developed),
-    PositionMapping("CSSPX", AssetTypes.Stocks, MarketTypes.Developed),
-    PositionMapping("AGGU", AssetTypes.Bonds, MarketTypes.General),
-    PositionMapping("VNQ", AssetTypes.REIT, MarketTypes.Developed),
-    PositionMapping("VNQI", AssetTypes.REIT, MarketTypes.Developed),
+    PositionMapping("VEA", AssetTypes.Stocks, MarketTypes.Developed, Exchanges.NYSE),  # NYSE ARCA
+    PositionMapping("CSSPX", AssetTypes.Stocks, MarketTypes.Developed, Exchanges.LSE),
+    PositionMapping("AGGU", AssetTypes.Bonds, MarketTypes.General, Exchanges.LSE),
+    PositionMapping("VNQ", AssetTypes.REIT, MarketTypes.Developed, Exchanges.NYSE),  # ARCA
+    PositionMapping("VNQI", AssetTypes.REIT, MarketTypes.Developed, Exchanges.NYSE),  # ARCA
 
     # Non-IB Assets
     PositionMapping("EIMI_IRA", AssetTypes.Stocks, MarketTypes.Emerging, is_tradable=False),
@@ -73,3 +73,5 @@ NON_TRADABLE_ASSETS_VALUE = {
     # TODO: A more accurate value can be brought if I multiply the EIMI value with number of positions
     "EIMI_IRA": 17233.76
 }
+
+CASH_MARGIN = 50

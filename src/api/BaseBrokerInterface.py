@@ -18,6 +18,10 @@ class BaseBrokerInterface(ABC):
     def request_cash_balance(self) -> float:
         pass
 
+    # @abstractmethod
+    # def get_exchange_for_symbol(self) -> Exchanges:
+    #     pass
+
     # @abstractmethod TODO: Implement if necessary in the future
     # def request_all_pending_orders(self):
     #     pass
