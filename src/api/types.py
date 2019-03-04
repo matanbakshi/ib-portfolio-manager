@@ -1,5 +1,7 @@
 from enum import Enum
 
+from src.common.ClassificationTypes import AssetTypes
+
 
 class OrderActions(Enum):
     SELL_ORDER = "SELL"
@@ -36,7 +38,9 @@ class MarketData:
 
 
 class PositionData:
-    def __init__(self, symbol: str, currency: Currencies, quantity: float, market_price: float, exchange: Exchanges):
+    def __init__(self, symbol: str, currency: Currencies, quantity: float, market_price: float, exchange: Exchanges,
+                 sec_type: SecTypes):
+        self.sec_type = sec_type
         self.exchange = exchange
         self.market_price = market_price
         self.quantity = quantity

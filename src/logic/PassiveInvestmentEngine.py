@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Dict
 
-from src.api.BaseBrokerInterface import BaseBrokerInterface, PositionData
+from src.api.BaseBrokerInterface import BaseBrokerInterface, PositionData, OrderTypes, OrderActions
 from src.api.BaseMarketDataInterface import BaseMarketDataInterface
 from src.logic.config import *
 from src.logic.rebalancing.LazyPortfolioRebalancer import LazyPortfolioRebalancer
@@ -16,10 +16,18 @@ class PassiveInvestmentEngine:
         self._current_positions = []
         self._check_open_markets = True
 
-        # Group the configured data by asset type and market type for convenience
-        self._ordered_mapping = {outer_v.market_type: {inner_v.asset_type: inner_v for inner_v in POSITIONS_MAPPINGS if
-                                                       inner_v.market_type == outer_v.market_type}
-                                 for outer_v in POSITIONS_MAPPINGS}
+        # Group the configured data by asset type and market type and symbol for convenience
+        self._ordered_mapping = self._group_configured_assets()
+
+    @staticmethod
+    def _group_configured_assets() -> Dict[MarketTypes, Dict[AssetTypes, Dict[str, PositionMapping]]]:
+        return {
+            outer_v.market_type: {inner_v.asset_type: {pos.name: pos for pos in POSITIONS_MAPPINGS if
+                                                       pos.market_type == outer_v.market_type and
+                                                       pos.asset_type == inner_v.asset_type}
+                                  for inner_v in POSITIONS_MAPPINGS}
+            for outer_v in POSITIONS_MAPPINGS
+        }
 
     def rebalance_with_available_cash(self):
         if not self._is_all_markets_open():
@@ -52,11 +60,17 @@ class PassiveInvestmentEngine:
     def _evaluate_and_order_asset(self, asset: Asset, value_to_order: float):
         actual_positions = self._ordered_mapping[asset.market_type][asset.asset_type]
 
-        # There might be multiple positions for the same asset. Find the least valued asset
-        min_pos_value = min(pos.market_value for pos in actual_positions)
-        least_valued_pos = next(pos for pos in actual_positions if pos == min_pos_value)
+        # There might be multiple positions for the same asset. Find the least valued asset.
+        least_valued_pos = min(actual_positions.values(), key=lambda x: x.updated_data.market_value)
 
-        pos_md = self._market_data_interface.get_market_data(least_valued_pos.symbol, least_valued_pos.exchange)
+        pos_md = self._market_data_interface.get_market_data(least_valued_pos.name, least_valued_pos.exchange)
+
+        # Quantity of stocks must be an integer. This might change for other markets.
+        quantity = int(value_to_order / pos_md.ask_price)
+
+        self._broker_interface.place_single_order(least_valued_pos.name, quantity, OrderTypes.LIMIT,
+                                                  OrderActions.BUY_ORDER, least_valued_pos.updated_data.sec_type,
+                                                  least_valued_pos.updated_data.currency, limit_price=pos_md.ask_price)
 
         # self._broker_interface.place_single_order(least_valued_pos.)
 
@@ -97,6 +111,7 @@ class PassiveInvestmentEngine:
 
                 if position is not None:
                     reb_asset.value += position.market_value
+                    self._ordered_mapping[mapping.market_type][mapping.asset_type][mapping.name].updated_data = position
                 else:
                     raise EnvironmentError(
                         f"{mapping.name} exists in the configuration but a position data was not received")

@@ -23,6 +23,7 @@ class PositionMapping:
         self.asset_type = asset_type
         self.market_type = market_type
         self.is_tradable = is_tradable
+        self.updated_data = None
 
 
 class Asset:

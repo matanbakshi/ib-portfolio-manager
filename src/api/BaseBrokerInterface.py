@@ -7,7 +7,8 @@ from src.api.types import *
 class BaseBrokerInterface(ABC):
     @abstractmethod
     def place_single_order(self, symbol: str, quantity: float, order_type: OrderTypes, action: OrderActions,
-                           sec_type: SecTypes, currency: Currencies, exchange: Exchanges, limit_price: float = -1.0):
+                           sec_type: SecTypes, currency: Currencies, exchange: Exchanges = None,
+                           limit_price: float = -1.0):
         pass
 
     @abstractmethod

@@ -3,14 +3,17 @@ from src.api.types import OrderTypes, OrderActions, SecTypes, Currencies, Exchan
 import requests
 import json
 
+
 IB_ACC_ID = "DU1162858"
 API_URL = "https://localhost:5000/v1/portal"
 CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
+IB_SMART_ROUTING = "SMART"
 
 
 class IBRESTBrokerInterface(BaseBrokerInterface):
     def place_single_order(self, symbol: str, quantity: float, order_type: OrderTypes, action: OrderActions,
-                           sec_type: SecTypes, currency: Currencies, exchange: Exchanges, limit_price: float = -1.0):
+                           sec_type: SecTypes, currency: Currencies, exchange: Exchanges = None,
+                           limit_price: float = -1.0):
         # TODO: finish after receiving answer for the "conid" parameter
         payload = {
             "acctId": IB_ACC_ID,
@@ -18,12 +21,12 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
             "secType": "string",  # should include conid (xxx:STK)
             "cOID": "single-order",  # Arbitrary string
             "orderType": order_type.value,
-            "listingExchange": exchange.value,
+            "listingExchange": exchange.value if exchange else IB_SMART_ROUTING,
             "outsideRTH": False,
             "side": action.value,
             "ticker": symbol,
             "tif": "GTC",  # order will be "Good Till Cancel", maybe it is required...
-            "referrer": "string",
+            "referrer": "",
             "quantity": quantity
         }
 
