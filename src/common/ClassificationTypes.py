@@ -4,14 +4,14 @@ from src.api.types import Exchanges
 
 
 class AssetTypes(Enum):
-    Stocks = 1,
-    Bonds = 2,
-    REIT = 3,
+    Stocks = 1
+    Bonds = 2
+    REIT = 3
 
 
 class MarketTypes(Enum):
-    General = 1,
-    Developed = 2,
+    General = 1
+    Developed = 2
     Emerging = 3
 
 

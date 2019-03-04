@@ -45,7 +45,7 @@ class PassiveInvestmentEngine:
         if not self._current_positions:
             raise SystemError("No tradeable holdings was received from the broker")
 
-        assets_before_balance = self._create_rebalance_entites_from_holdings(self._current_positions)
+        assets_before_balance = self._create_rebalance_entites_and_enrich_data(self._current_positions)
 
         rebalanced_assets = self._rebalancer.rebalance_by_contribution(assets_before_balance,
                                                                        cash_balance - CASH_MARGIN)
@@ -68,26 +68,29 @@ class PassiveInvestmentEngine:
         # Quantity of stocks must be an integer. This might change for other markets.
         quantity = int(value_to_order / pos_md.ask_price)
 
-        self._broker_interface.place_single_order(least_valued_pos.name, quantity, OrderTypes.LIMIT,
+        self._broker_interface.place_single_order(least_valued_pos.updated_data.contract_id, quantity, OrderTypes.LIMIT,
                                                   OrderActions.BUY_ORDER, least_valued_pos.updated_data.sec_type,
                                                   least_valued_pos.updated_data.currency, limit_price=pos_md.ask_price)
 
         # self._broker_interface.place_single_order(least_valued_pos.)
 
-    def _is_all_markets_open(self):
+    @staticmethod
+    def _is_all_markets_open() -> bool:
         for pos_map in POSITIONS_MAPPINGS:
             if not is_market_open(pos_map.exchange.value):
                 return False
         return True
 
-    def _create_rebalance_entites_from_holdings(self, holdings: List[PositionData]) -> List[RebalanceAssetData]:
+    def _create_rebalance_entites_and_enrich_data(self, updated_positions: List[PositionData]) \
+            -> List[RebalanceAssetData]:
+
         rebalance_assets = {}
 
         for asset in ASSET_ALLOCATIONS:
             rebalance_assets[f"{asset.asset_type}.{asset.market_type}"] = RebalanceAssetData(asset, 0.0,
                                                                                              asset.allocation_percentage)
 
-        positions_dict = {x.symbol: x for x in holdings}
+        positions_dict = {x.symbol: x for x in updated_positions}
 
         for mapping in POSITIONS_MAPPINGS:
             reb_asset = rebalance_assets.get(f"{mapping.asset_type}.{mapping.market_type}")
