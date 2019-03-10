@@ -49,7 +49,6 @@ class PassiveInvestmentEngine:
 
         rebalanced_assets = self._rebalancer.rebalance_by_contribution(assets_before_balance,
                                                                        cash_balance - CASH_MARGIN)
-
         self._perform_assets_gap_ordering(rebalanced_assets)
 
     def _perform_assets_gap_ordering(self, reb_assets: List[RebalanceAssetData]):
@@ -71,8 +70,6 @@ class PassiveInvestmentEngine:
         self._broker_interface.place_single_order(least_valued_pos.updated_data.contract_id, quantity, OrderTypes.LIMIT,
                                                   OrderActions.BUY_ORDER, least_valued_pos.updated_data.sec_type,
                                                   least_valued_pos.updated_data.currency, limit_price=pos_md.ask_price)
-
-        # self._broker_interface.place_single_order(least_valued_pos.)
 
     @staticmethod
     def _is_all_markets_open() -> bool:
