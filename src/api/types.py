@@ -37,7 +37,9 @@ class OrderState(Enum):
     API_CANCELLED = "ApiCancelled"
     CANCELLED = "Cancelled"
     FILLED = "Filled"
-    INACTIVE = "Inactive"
+    INACTIVE = "Inactive",
+
+    FAILED = "Failed"
 
 
 class MarketData:

@@ -7,6 +7,8 @@ from src.logic.rebalancing.LazyPortfolioRebalancer import LazyPortfolioRebalance
 from src.logic.rebalancing.entities.RebalanceAssetData import RebalanceAssetData
 from src.utils.market_open import is_market_open
 
+from src.logger import logger
+
 
 class PassiveInvestmentEngine:
     def __init__(self, broker_interface: BaseBrokerInterface, market_data_interface: BaseMarketDataInterface):
@@ -15,6 +17,7 @@ class PassiveInvestmentEngine:
         self._rebalancer = LazyPortfolioRebalancer()
         self._current_positions = []
         self._check_open_markets = True
+        self._latest_market_data = []
 
         # Group the configured data by asset type and market type and symbol for convenience
         self._ordered_mapping = self._group_configured_assets()
@@ -40,15 +43,26 @@ class PassiveInvestmentEngine:
         if cash_balance <= 0:
             raise SystemError("Insufficient funds to starts a rebalancing and ordering process.")
 
+        logger.info(f"Cash balance: {cash_balance}")
+
         self._current_positions = self._broker_interface.request_all_holdings()
+
+        logger.info(f"Current positions: {self._current_positions}")
 
         if not self._current_positions:
             raise SystemError("No tradeable holdings was received from the broker")
 
         assets_before_balance = self._create_rebalance_entites_and_enrich_data(self._current_positions)
 
+        logger.info(f"Assets before rebalance: {assets_before_balance}")
+
+        self._fetch_latest_market_data()
+
         rebalanced_assets = self._rebalancer.rebalance_by_contribution(assets_before_balance,
                                                                        cash_balance - CASH_MARGIN)
+
+        logger.info(f"Assets after rebalance: {rebalanced_assets}")
+
         self._perform_assets_gap_ordering(rebalanced_assets)
 
     def _perform_assets_gap_ordering(self, reb_assets: List[RebalanceAssetData]):
@@ -62,14 +76,23 @@ class PassiveInvestmentEngine:
         # There might be multiple positions for the same asset. Find the least valued asset.
         least_valued_pos = min(actual_positions.values(), key=lambda x: x.updated_data.market_value)
 
-        pos_md = self._market_data_interface.get_market_data(least_valued_pos.name, least_valued_pos.exchange)
+        pos_md = self._latest_market_data[least_valued_pos.updated_data.contract_id]
 
         # Quantity of stocks must be an integer. This might change for other markets.
         quantity = int(value_to_order / pos_md.ask_price)
 
-        self._broker_interface.place_single_order(least_valued_pos.updated_data.contract_id, quantity, OrderTypes.LIMIT,
-                                                  OrderActions.BUY_ORDER, least_valued_pos.updated_data.sec_type,
-                                                  least_valued_pos.updated_data.currency, limit_price=pos_md.ask_price)
+        logger.info(f"Placing order: BUY >> {least_valued_pos.name}, "
+                    f"Quantity: {quantity}, "
+                    f"Ask Price: {pos_md.ask_price}")
+
+        order_state = self._broker_interface.place_single_order(least_valued_pos.updated_data.contract_id,
+                                                                least_valued_pos.name,
+                                                                quantity, OrderTypes.LIMIT, OrderActions.BUY_ORDER,
+                                                                least_valued_pos.updated_data.sec_type,
+                                                                least_valued_pos.updated_data.currency,
+                                                                limit_price=pos_md.ask_price)
+
+        logger.info(f"Order placed. State: {order_state}")
 
     @staticmethod
     def _is_all_markets_open() -> bool:
@@ -117,3 +140,8 @@ class PassiveInvestmentEngine:
                         f"{mapping.name} exists in the configuration but a position data was not received")
 
         return list(rebalance_assets.values())
+
+    def _fetch_latest_market_data(self):
+        con_ids = [pos.contract_id for pos in self._current_positions]
+        if con_ids:
+            self._latest_market_data = self._market_data_interface.get_market_data(con_ids)

@@ -4,7 +4,8 @@ from src.logic.rebalancing.entities.RebalanceAssetData import RebalanceAssetData
 
 
 class LazyPortfolioRebalancer:
-    def rebalance_by_contribution(self, assets: List[RebalanceAssetData], contribution: float) -> List[RebalanceAssetData]:
+    def rebalance_by_contribution(self, assets: List[RebalanceAssetData], contribution: float) \
+            -> List[RebalanceAssetData]:
         current_value = sum(asset.value for asset in assets)
         total_value = current_value + contribution
 

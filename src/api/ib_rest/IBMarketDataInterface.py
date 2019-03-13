@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Dict
 
 import requests
 
@@ -19,10 +19,12 @@ SNAPSHOT_FIELDS = {
 
 
 class IBMarketDataInterface(BaseMarketDataInterface):
-    def get_market_data(self, contract_ids: List[int]) -> List[MarketData]:
+    def get_market_data(self, contract_ids: List[int]) -> Dict[int, MarketData]:
         conids_str = ",".join(str(i) for i in contract_ids)
         jres = requests.get(f"{API_URL}/iserver/account/{IB_ACC_ID}/order?conids={conids_str}")
         res_content = json.loads(jres.content)
+
+        md_dict = {}
 
         for pos_data in res_content:
             bid_price = pos_data[SNAPSHOT_FIELDS["bid_price"]]
@@ -30,4 +32,6 @@ class IBMarketDataInterface(BaseMarketDataInterface):
             ask_price = pos_data[SNAPSHOT_FIELDS["ask_price"]]
             ask_size = pos_data[SNAPSHOT_FIELDS["ask_size"]]
 
-            yield MarketData(ask_price, ask_size, bid_price, bid_size)
+            md_dict[pos_data["conid"]] = MarketData(ask_price, ask_size, bid_price, bid_size)
+
+        return md_dict
