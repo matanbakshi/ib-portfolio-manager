@@ -1,7 +1,7 @@
 region: us-east-2
 
 function_name: portfolio-manager
-handler: main.lambda_handler
+handler: service.run
 description: Portfolio Manager First Lambda
 runtime: python3.7
 #role: root
