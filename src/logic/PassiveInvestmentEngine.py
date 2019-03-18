@@ -45,6 +45,9 @@ class PassiveInvestmentEngine:
 
         logger.info(f"Cash balance: {cash_balance}")
 
+        cash_balance = 5000.0  # TESTING
+        logger.warn(f"Using constant: {cash_balance} for testing")
+
         self._current_positions = self._broker_interface.request_all_holdings()
 
         logger.info(f"Current positions: {self._current_positions}")
