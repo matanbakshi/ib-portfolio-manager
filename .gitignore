@@ -1,6 +1,8 @@
 package
 .idea
 bin/
+config/*
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,5 +1,5 @@
 from src.entry.main import run
-from src.tools.ib_gateway_launcher import launch_ib_gateway
+from src.utils.ib_gateway_launcher import launch_ib_gateway
 
 
 def run(event, context):

@@ -1,5 +1,5 @@
 from threading import Thread, Event
-from src.tools.sync_helpers import wait_for_all_events
+from src.utils.sync_helpers import wait_for_all_events
 from typing import List
 from ibapi.account_summary_tags import AccountSummaryTags
 
