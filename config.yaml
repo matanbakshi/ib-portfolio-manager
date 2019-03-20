@@ -36,4 +36,4 @@ environment_variables:
 
 # Build options
 build:
-  source_directories: src,bin # a comma delimited list of directories in your project root that contains source to package.
+  source_directories: src,bin,config # a comma delimited list of directories in your project root that contains source to package.

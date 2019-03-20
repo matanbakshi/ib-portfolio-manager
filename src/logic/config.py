@@ -19,7 +19,7 @@ ASSET_ALLOCATIONS = [
     Asset(AssetTypes.Stocks, MarketTypes.Developed, 30.0),
     Asset(AssetTypes.Stocks, MarketTypes.Emerging, 30.0),
     Asset(AssetTypes.Bonds, MarketTypes.General, 30.0),
-    Asset(AssetTypes.REIT, MarketTypes.General, 10.0),
+    Asset(AssetTypes.REIT, MarketTypes.Developed, 10.0),
 ]
 
 # Needs to be updated manually.

@@ -16,15 +16,21 @@ CREDS_FILE_PATH = "../config/ib_creds.json"
 GATEWAY_RUNNING_PHRASE = "Open https://localhost:5000 to login"
 GATEWAY_RUN_PATH = "bin/run.sh"
 GATEWAY_CONF_ATH = "root/conf.yaml"
-GATEWAY_WORKDIR_PATH = "/home/matan/clientportal.beta.gw"
+GATEWAY_WORKDIR_PATH = "../bin/ib_gateway"
+GATEWAY_AUTH_SCRIPT_PATH = "../bin/ib_gateway/auth.sh"
 
 
-def launch_ib_gateway():
-    _open_gateway_process()
+def launch_ib_gateway_and_auth(retry_auth=False):
+    if not retry_auth:
+        open_gateway_process()
     _automate_auth()
+    _run_post_auth_script()
+
+def _run_post_auth_script():
+    subprocess.run([GATEWAY_AUTH_SCRIPT_PATH])
 
 
-def _open_gateway_process():
+def open_gateway_process():
     p = subprocess.Popen([GATEWAY_RUN_PATH, GATEWAY_CONF_ATH], cwd=GATEWAY_WORKDIR_PATH,
                          stdout=subprocess.PIPE)
 
@@ -79,4 +85,4 @@ def _automate_auth():
 
 
 if __name__ == "__main__":
-    launch_ib_gateway()
+    launch_ib_gateway_and_auth()

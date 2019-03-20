@@ -5,7 +5,7 @@ import requests
 
 from src.api.BaseMarketDataInterface import BaseMarketDataInterface
 from src.api.types import Exchanges, MarketData
-from src.api.ib_rest.IBRESTBrokerInterface import API_URL, IB_ACC_ID
+from src.api.ib_rest.IBRESTBrokerInterface import API_URL, IB_ACC_ID, REQUESTS_TIMEOUT_SEC
 
 # IEX_TOKEN = "sk_7c26fe796d21446badbda3e5684d3e01"
 # ALPHA_TOKEN = "2G8RJF25L3Y8WY83"
@@ -21,7 +21,7 @@ SNAPSHOT_FIELDS = {
 class IBMarketDataInterface(BaseMarketDataInterface):
     def get_market_data(self, contract_ids: List[int]) -> Dict[int, MarketData]:
         conids_str = ",".join(str(i) for i in contract_ids)
-        jres = requests.get(f"{API_URL}/iserver/account/{IB_ACC_ID}/order?conids={conids_str}")
+        jres = requests.get(f"{API_URL}/iserver/account/{IB_ACC_ID}/order?conids={conids_str}", timeout=REQUESTS_TIMEOUT_SEC)
         res_content = json.loads(jres.content)
 
         md_dict = {}
