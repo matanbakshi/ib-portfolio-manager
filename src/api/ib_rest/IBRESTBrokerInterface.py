@@ -1,3 +1,5 @@
+from time import sleep
+
 from src.api.BaseBrokerInterface import BaseBrokerInterface
 from src.api.types import OrderTypes, OrderActions, SecTypes, Currencies, Exchanges, OrderState, PositionData
 import requests
@@ -14,7 +16,7 @@ CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
 IB_SMART_ROUTING = "SMART"
 
 REQUESTS_TIMEOUT_SEC = 3
-AUTH_RETRY_THRESHOLD = 3
+AUTH_RETRY_THRESHOLD = 5
 
 
 class IBRESTBrokerInterface(BaseBrokerInterface):
@@ -28,17 +30,20 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
     def _launch_and_validate_ib_gateway(self):
         self._connection_attempts += 1
         _launcher.launch_ib_gateway_and_auth(retry_auth=self._connection_attempts > 1)
+
+        sleep(2)
         self._validate_gateway_auth()
 
     def _validate_gateway_auth(self):
         # Validate if authentication was successful
         try:
             balance = self.request_cash_balance()
-            assert balance is float
+            assert balance is not float
         except:
-            L.error(f"Authentication to IB failed for attempt #{self._connection_attempts}, error: {sys.exc_value}.")
+            L.error(f"Authentication to IB failed for attempt #{self._connection_attempts}, error: {sys.exc_info()[0]}.")
 
             if self._connection_attempts < AUTH_RETRY_THRESHOLD:
+                sleep(2)
                 self._launch_and_validate_ib_gateway()
             else:
                 L.fatal(f"Stopped retrying connection reaching a threshold.")

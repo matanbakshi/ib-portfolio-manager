@@ -23,8 +23,9 @@ GATEWAY_AUTH_SCRIPT_PATH = "../bin/ib_gateway/auth.sh"
 def launch_ib_gateway_and_auth(retry_auth=False):
     if not retry_auth:
         open_gateway_process()
-    _automate_auth()
+        _automate_auth()
     _run_post_auth_script()
+
 
 def _run_post_auth_script():
     subprocess.run([GATEWAY_AUTH_SCRIPT_PATH])

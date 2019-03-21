@@ -16,8 +16,9 @@ POSITIONS_MAPPINGS = [
 ]
 
 ASSET_ALLOCATIONS = [
-    Asset(AssetTypes.Stocks, MarketTypes.Developed, 30.0),
-    Asset(AssetTypes.Stocks, MarketTypes.Emerging, 30.0),
+    Asset(AssetTypes.Stocks, MarketTypes.General, 15.0),
+    Asset(AssetTypes.Stocks, MarketTypes.Developed, 20.0),
+    Asset(AssetTypes.Stocks, MarketTypes.Emerging, 25.0),
     Asset(AssetTypes.Bonds, MarketTypes.General, 30.0),
     Asset(AssetTypes.REIT, MarketTypes.Developed, 10.0),
 ]
@@ -26,7 +27,7 @@ ASSET_ALLOCATIONS = [
 NON_TRADABLE_ASSETS_VALUE = {
     "InvProvident_Stocks": 40369.0,
     "InvProvident_Bonds": 40369.0,
-    "Pension": 42372.0,
+    "Pension_Stocks": 42372.0,
 
     # TODO: A more accurate value can be brought if I multiply the EIMI value with number of positions
     "EIMI_IRA": 17233.76

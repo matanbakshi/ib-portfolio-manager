@@ -5,8 +5,6 @@ from src.utils.ib_gateway_launcher import launch_ib_gateway_and_auth
 
 
 def run():
-    launch_ib_gateway_and_auth()
-
     engine = PassiveInvestmentEngine(IBRESTBrokerInterface(), IBMarketDataInterface())
 
     engine.rebalance_with_available_cash()
