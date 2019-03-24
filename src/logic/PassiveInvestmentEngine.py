@@ -6,6 +6,7 @@ from src.logic.config import *
 from src.logic.rebalancing.LazyPortfolioRebalancer import LazyPortfolioRebalancer
 from src.logic.rebalancing.entities.RebalanceAssetData import RebalanceAssetData
 from src.utils.market_open import is_market_open
+from src.logic.TransactionManager import TransactionManager
 
 from src.logger import logger
 
@@ -18,7 +19,7 @@ class PassiveInvestmentEngine:
         self._current_positions = []
         self._check_open_markets = True
         self._latest_market_data = []
-
+        self._transaction_mgr = TransactionManager()
         # Group the configured data by asset type and market type and symbol for convenience
         self._ordered_mapping = self._group_configured_assets()
 
@@ -33,10 +34,10 @@ class PassiveInvestmentEngine:
         }
 
     def rebalance_with_available_cash(self):
-        if not self._is_all_markets_open():
-            raise SystemError(
-                "Not all of the markets are open currently. "
-                "Try again in better time when both London and NYE are trading")
+        # if not self._is_all_markets_open():
+        #     raise SystemError(
+        #         "Not all of the markets are open currently. "
+        #         "Try again in better time when both London and NYE are trading")
 
         cash_balance = self._broker_interface.request_cash_balance()
 
@@ -70,8 +71,10 @@ class PassiveInvestmentEngine:
 
     def _perform_assets_gap_ordering(self, reb_assets: List[RebalanceAssetData]):
         for reb_asset in reb_assets:
-            if reb_asset.delta > 0:
+            if reb_asset.delta and reb_asset.delta > 0:
                 self._evaluate_and_order_asset(reb_asset.asset, reb_asset.delta)
+
+        self._transaction_mgr.execute_all()
 
     def _evaluate_and_order_asset(self, asset: Asset, value_to_order: float):
         actual_positions = self._ordered_mapping[asset.market_type][asset.asset_type]
@@ -82,20 +85,26 @@ class PassiveInvestmentEngine:
         pos_md = self._latest_market_data[least_valued_pos.updated_data.contract_id]
 
         # Quantity of stocks must be an integer. This might change for other markets.
-        quantity = int(value_to_order / pos_md.ask_price)
+        ask_price = pos_md.ask_price
+
+        if ask_price is None:
+            raise SystemError(f"Ask price is not available for: {least_valued_pos.name}")
+
+        quantity = int(value_to_order / ask_price)
 
         logger.info(f"Placing order: BUY >> {least_valued_pos.name}, "
                     f"Quantity: {quantity}, "
                     f"Ask Price: {pos_md.ask_price}")
 
-        order_state = self._broker_interface.place_single_order(least_valued_pos.updated_data.contract_id,
-                                                                least_valued_pos.name,
-                                                                quantity, OrderTypes.LIMIT, OrderActions.BUY_ORDER,
-                                                                least_valued_pos.updated_data.sec_type,
-                                                                least_valued_pos.updated_data.currency,
-                                                                limit_price=pos_md.ask_price)
+        self._transaction_mgr.queue_for_execution(
+            self._broker_interface.place_single_order,
 
-        logger.info(f"Order placed. State: {order_state}")
+            least_valued_pos.updated_data.contract_id,
+            least_valued_pos.name,
+            quantity, OrderTypes.LIMIT, OrderActions.BUY_ORDER,
+            least_valued_pos.updated_data.sec_type,
+            least_valued_pos.updated_data.currency,
+            limit_price=ask_price)
 
     @staticmethod
     def _is_all_markets_open() -> bool:

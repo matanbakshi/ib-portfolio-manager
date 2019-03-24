@@ -80,6 +80,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
                            sec_type: SecTypes, currency: Currencies, exchange: Exchanges = None,
                            limit_price: float = -1.0) -> OrderState:
         # TODO: finish after receiving answer for the "conid" parameter
+        L.info(f"Trying to order: {symbol}")
 
         payload = {
             "acctId": IB_ACC_ID,
