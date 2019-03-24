@@ -43,7 +43,8 @@ class OrderState(Enum):
 
 
 class MarketData:
-    def __init__(self, ask_price: float, ask_size: int, bid_price: float, bid_size: int):
+    def __init__(self, symbol: str, ask_price: float, ask_size: int, bid_price: float, bid_size: int):
+        self.symbol = symbol
         self.ask_price = ask_price
         self.ask_size = ask_size
         self.bid_price = bid_price

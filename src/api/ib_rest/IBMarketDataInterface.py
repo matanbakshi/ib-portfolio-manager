@@ -11,6 +11,7 @@ from src.api.ib_rest.IBRESTBrokerInterface import API_URL, IB_ACC_ID, REQUESTS_T
 # ALPHA_TOKEN = "2G8RJF25L3Y8WY83"
 
 SNAPSHOT_FIELDS = {
+    "symbol": "55",
     "bid_price": "84",
     "bid_size": "88",
     "ask_price": "86",
@@ -21,17 +22,31 @@ SNAPSHOT_FIELDS = {
 class IBMarketDataInterface(BaseMarketDataInterface):
     def get_market_data(self, contract_ids: List[int]) -> Dict[int, MarketData]:
         conids_str = ",".join(str(i) for i in contract_ids)
-        jres = requests.get(f"{API_URL}/iserver/account/{IB_ACC_ID}/order?conids={conids_str}", timeout=REQUESTS_TIMEOUT_SEC)
+        jres = requests.get(f"{API_URL}/iserver/marketdata/snapshot?conids={conids_str}", verify=False,
+                            timeout=REQUESTS_TIMEOUT_SEC)
+
+        jres = requests.get(f"{API_URL}/iserver/marketdata/snapshot?conids={conids_str}", verify=False,
+                            timeout=REQUESTS_TIMEOUT_SEC)
+
         res_content = json.loads(jres.content)
 
         md_dict = {}
 
         for pos_data in res_content:
-            bid_price = pos_data[SNAPSHOT_FIELDS["bid_price"]]
-            bid_size = pos_data[SNAPSHOT_FIELDS["bid_size"]]
-            ask_price = pos_data[SNAPSHOT_FIELDS["ask_price"]]
-            ask_size = pos_data[SNAPSHOT_FIELDS["ask_size"]]
+            bid_price = float(pos_data[SNAPSHOT_FIELDS["bid_price"]]) \
+                if SNAPSHOT_FIELDS["bid_price"] in pos_data else None
 
-            md_dict[pos_data["conid"]] = MarketData(ask_price, ask_size, bid_price, bid_size)
+            bid_size = int(pos_data[SNAPSHOT_FIELDS["bid_size"]].replace(",", "")) \
+                if SNAPSHOT_FIELDS["bid_size"] in pos_data else None
+
+            ask_price = float(pos_data[SNAPSHOT_FIELDS["ask_price"]]) if \
+                SNAPSHOT_FIELDS["ask_price"] in pos_data else None
+
+            ask_size = int(pos_data[SNAPSHOT_FIELDS["ask_size"]].replace(",", "")) \
+                if SNAPSHOT_FIELDS["ask_size"] in pos_data else None
+
+            symbol = pos_data[SNAPSHOT_FIELDS["symbol"]]
+
+            md_dict[pos_data["conid"]] = MarketData(symbol, ask_price, ask_size, bid_price, bid_size)
 
         return md_dict

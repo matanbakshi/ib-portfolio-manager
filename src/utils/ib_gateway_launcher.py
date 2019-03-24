@@ -24,7 +24,7 @@ def launch_ib_gateway_and_auth(retry_auth=False):
     if not retry_auth:
         open_gateway_process()
         _automate_auth()
-    _run_post_auth_script()
+    # _run_post_auth_script()
 
 
 def _run_post_auth_script():

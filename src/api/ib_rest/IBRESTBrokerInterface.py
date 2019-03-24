@@ -16,7 +16,7 @@ CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
 IB_SMART_ROUTING = "SMART"
 
 REQUESTS_TIMEOUT_SEC = 3
-AUTH_RETRY_THRESHOLD = 5
+AUTH_RETRY_THRESHOLD = 20
 
 
 class IBRESTBrokerInterface(BaseBrokerInterface):
@@ -27,9 +27,18 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
 
         self._launch_and_validate_ib_gateway()
 
-    def _launch_and_validate_ib_gateway(self):
+    def _launch_and_validate_ib_gateway(self, retry=False):
+        # _launcher.launch_ib_gateway_and_auth(retry_auth=self._connection_attempts > 1)
         self._connection_attempts += 1
-        _launcher.launch_ib_gateway_and_auth(retry_auth=self._connection_attempts > 1)
+
+        if not retry:
+            _launcher.launch_ib_gateway_and_auth(False)
+        else:
+            res = requests.post(f"{API_URL}/iserver/reauthenticate", verify=False)
+            L.debug(res.content)
+
+        sleep(3)
+        self._call_post_auth_methods()
 
         sleep(2)
         self._validate_gateway_auth()
@@ -40,14 +49,31 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
             balance = self.request_cash_balance()
             assert balance is not float
         except:
-            L.error(f"Authentication to IB failed for attempt #{self._connection_attempts}, error: {sys.exc_info()[0]}.")
+            L.error(
+                f"Authentication to IB failed for attempt #{self._connection_attempts}, error: {sys.exc_info()[0]}.")
 
             if self._connection_attempts < AUTH_RETRY_THRESHOLD:
                 sleep(2)
-                self._launch_and_validate_ib_gateway()
+                self._launch_and_validate_ib_gateway(retry=True)
             else:
                 L.fatal(f"Stopped retrying connection reaching a threshold.")
                 raise
+
+    def _call_post_auth_methods(self):
+        res = requests.get(f"{API_URL}/sso/validate", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        L.debug(res.content)
+        sleep(.5)
+        res = requests.get(f"{API_URL}/one/user", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        L.debug(res.content)
+        sleep(.5)
+        res = requests.get(f"{API_URL}/portfolio/accounts", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        L.debug(res.content)
+        sleep(.5)
+        res = requests.get(f"{API_URL}/iserver/auth/status", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        L.debug(res.content)
+        sleep(.5)
+        res = requests.get(f"{API_URL}/iserver/accounts", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        L.debug(res.content)
 
     def place_single_order(self, contract_id: int, symbol: str, quantity: float, order_type: OrderTypes,
                            action: OrderActions,
@@ -104,10 +130,13 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
                             timeout=REQUESTS_TIMEOUT_SEC)
         payload = json.loads(jres.content)
 
+        positions = []
         for item in payload:
-            yield PositionData(symbol=item["ticker"], currency=Currencies(item["currency"]), quantity=item["position"],
-                               market_price=item["mktPrice"], sec_type=SecTypes(item["assetClass"]),
-                               contract_id=item["conid"])
+            positions.append(
+                PositionData(symbol=item["ticker"], currency=Currencies(item["currency"]), quantity=item["position"],
+                             market_price=item["mktPrice"], sec_type=SecTypes(item["assetClass"]),
+                             contract_id=item["conid"]))
+        return positions
 
     def request_cash_balance(self) -> float:
         res = requests.get(f"{API_URL}/portfolio/{IB_ACC_ID}/ledger", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
