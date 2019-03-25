@@ -24,7 +24,7 @@ dist_directory: dist
 
 # Experimental Environment variables
 environment_variables:
-  PATH: /var/task/bin
+  PATH: /var/task/external_bin
   PYTHONPATH: /var/task/lib
 
 # If `tags` is uncommented then tags will be set at creation or update
@@ -36,4 +36,4 @@ environment_variables:
 
 # Build options
 build:
-  source_directories: src,bin,config # a comma delimited list of directories in your project root that contains source to package.
+  source_directories: src,external_bin,config # a comma delimited list of directories in your project root that contains source to package.

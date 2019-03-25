@@ -16,8 +16,8 @@ CREDS_FILE_PATH = "../config/ib_creds.json"
 GATEWAY_RUNNING_PHRASE = "Open https://localhost:5000 to login"
 GATEWAY_RUN_PATH = "bin/run.sh"
 GATEWAY_CONF_ATH = "root/conf.yaml"
-GATEWAY_WORKDIR_PATH = "../bin/ib_gateway"
-GATEWAY_AUTH_SCRIPT_PATH = "../bin/ib_gateway/auth.sh"
+GATEWAY_WORKDIR_PATH = "../external_bin/ib_gateway"
+GATEWAY_AUTH_SCRIPT_PATH = "../external_bin/ib_gateway/auth.sh"
 
 
 def launch_ib_gateway_and_auth(retry_auth=False):

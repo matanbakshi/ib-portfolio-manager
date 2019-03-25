@@ -1,4 +1,3 @@
 requests
 pandas-market-calendars
 selenium==2.52.0
-chromedriver-install==0.3
