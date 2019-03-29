@@ -5,7 +5,7 @@ from src.api.BaseMarketDataInterface import BaseMarketDataInterface
 from src.logic.config import *
 from src.logic.rebalancing.LazyPortfolioRebalancer import LazyPortfolioRebalancer
 from src.logic.rebalancing.entities.RebalanceAssetData import RebalanceAssetData
-from src.utils.market_open import is_market_open
+# from src.utils.market_open import is_market_open
 from src.logic.TransactionManager import TransactionManager
 
 from src.logger import logger
@@ -74,7 +74,7 @@ class PassiveInvestmentEngine:
             if reb_asset.delta and reb_asset.delta > 0:
                 self._evaluate_and_order_asset(reb_asset.asset, reb_asset.delta)
 
-        self._transaction_mgr.execute_all()
+        # self._transaction_mgr.execute_all()
 
     def _evaluate_and_order_asset(self, asset: Asset, value_to_order: float):
         actual_positions = self._ordered_mapping[asset.market_type][asset.asset_type]
@@ -106,12 +106,12 @@ class PassiveInvestmentEngine:
             least_valued_pos.updated_data.currency,
             limit_price=ask_price)
 
-    @staticmethod
-    def _is_all_markets_open() -> bool:
-        for pos_map in POSITIONS_MAPPINGS:
-            if not is_market_open(pos_map.exchange.value):
-                return False
-        return True
+    # @staticmethod
+    # def _is_all_markets_open() -> bool:
+    #     for pos_map in POSITIONS_MAPPINGS:
+    #         if not is_market_open(pos_map.exchange.value):
+    #             return False
+    #     return True
 
     def _create_rebalance_entites_and_enrich_data(self, updated_positions: List[PositionData]) \
             -> List[RebalanceAssetData]:

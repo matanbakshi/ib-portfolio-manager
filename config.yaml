@@ -1,7 +1,7 @@
 region: us-east-2
 
 function_name: portfolio-manager
-handler: service.run
+handler: service.run_service
 description: Portfolio Manager First Lambda
 runtime: python3.7
 #role: root
@@ -17,22 +17,22 @@ aws_access_key_id:
 aws_secret_access_key:
 
 dist_directory: dist
-# timeout: 15
+timeout: 180
 # memory_size: 512
 # concurrency: 500
 #
 
 # Experimental Environment variables
 environment_variables:
-  PATH: /var/task/external_bin
-  PYTHONPATH: /var/task/lib
+#  PATH: "/var/task/external_bin:/var/runtime:/var/lang"
+  PATH: "/usr/bin:external_bin"
+  PYTHONPATH: "/var/task/lib"
 
 # If `tags` is uncommented then tags will be set at creation or update
 # time.  During an update all other tags will be removed except the tags
 # listed here.
-#tags:
-#    tag_1: foo
-#    tag_2: bar
+tags:
+    token: abcd
 
 # Build options
 build:

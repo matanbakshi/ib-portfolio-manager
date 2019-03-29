@@ -8,6 +8,9 @@ from src.api.BaseBrokerInterface import BaseBrokerInterface
 from src.api.ib_nativeapi.ib_entities_factory import *
 from src.api.ib_nativeapi.ib_app_objects import IBApp
 from src.api.ib_nativeapi.IBEventsHandler import IBEventsHandler
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 CONSTANT_ID = 9008
 

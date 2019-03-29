@@ -6,29 +6,27 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import json
+from time import time
 
 from selenium.webdriver.support.wait import WebDriverWait
 
 from src.logger import logger
 
+from src.utils.config_loader import creds_conf
+
 LOGIN_SUCCEEDS_PHRASE = "Client login succeeds"
-CREDS_FILE_PATH = "../config/ib_creds.json"
+CREDS_FILE_PATH = "config/creds.json"
 GATEWAY_RUNNING_PHRASE = "Open https://localhost:5000 to login"
 GATEWAY_RUN_PATH = "bin/run.sh"
 GATEWAY_CONF_ATH = "root/conf.yaml"
-GATEWAY_WORKDIR_PATH = "../external_bin/ib_gateway"
-GATEWAY_AUTH_SCRIPT_PATH = "../external_bin/ib_gateway/auth.sh"
+GATEWAY_WORKDIR_PATH = "external_bin/clientportal.beta.gw"
+TIMEOUT_SECONDS = 10
 
 
 def launch_ib_gateway_and_auth(retry_auth=False):
     if not retry_auth:
         open_gateway_process()
         _automate_auth()
-    # _run_post_auth_script()
-
-
-def _run_post_auth_script():
-    subprocess.run([GATEWAY_AUTH_SCRIPT_PATH])
 
 
 def open_gateway_process():
@@ -38,14 +36,17 @@ def open_gateway_process():
     # Reading stdout without blocking (https://stackoverflow.com/a/8980466/10249811)
     fcntl.fcntl(p.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-    # Read stdout until gateway launch finish
-    sleep(1)
+    # Read stdout until gateway launch finish or timeout reached
+    start = time()
+    time_elapsed_sec = 0
+
     aggregated_output = b""
-    current_output = p.stdout.read()
-    while current_output:
-        aggregated_output += current_output
-        sleep(0.5)
+    while GATEWAY_RUNNING_PHRASE not in str(aggregated_output) and time_elapsed_sec <= TIMEOUT_SECONDS:
         current_output = p.stdout.read()
+        if current_output is not None:
+            aggregated_output += current_output
+        sleep(1)
+        time_elapsed_sec = start - time()
 
     if GATEWAY_RUNNING_PHRASE not in str(aggregated_output):
         raise SystemError(f"IB gateway failed to launch, output: {aggregated_output}")
@@ -53,16 +54,10 @@ def open_gateway_process():
     return True
 
 
-def _load_ib_creds():
-    with open(CREDS_FILE_PATH, "r") as creds_file:
-        creds = json.load(creds_file)
-        return creds["user_name"], creds["password"]
-
-
 def _automate_auth():
-    user_name, password = _load_ib_creds()
+    user_name, password = creds_conf["user_name"], creds_conf["password"]
 
-    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'])
+    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'], service_log_path="/tmp/phantom_logs.log")
     driver.get("https://localhost:5000")
 
     un_box = driver.find_element_by_id("user_name")
