@@ -11,7 +11,7 @@ import sys
 import src.utils.ib_gateway_launcher as _launcher
 
 IB_ACC_ID = "DU1162858"
-API_URL = "https://localhost:5000/v1/portal"
+API_URL = "https://localhost:5000/alpha/portal"
 CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
 IB_SMART_ROUTING = "SMART"
 
@@ -32,7 +32,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         self._connection_attempts += 1
 
         if not retry:
-            _launcher.launch_ib_gateway_and_auth(False)
+            _launcher.launch_ib_gateway_and_auth()
         else:
             res = requests.post(f"{API_URL}/iserver/reauthenticate", verify=False)
             L.debug(res.content)
