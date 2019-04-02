@@ -1,6 +1,12 @@
 import json
 
-from src.utils.ib_gateway_launcher import CREDS_FILE_PATH
+CREDS_FILE_PATH = "config/creds.json"
 
-with open(CREDS_FILE_PATH, "r") as creds_file:
-    creds_conf = json.load(creds_file)
+
+def read_config():
+    with open(CREDS_FILE_PATH, "r") as creds_file:
+        conf = json.load(creds_file)
+    return conf
+
+
+creds_conf = read_config()
