@@ -22,10 +22,11 @@ class Exchanges(Enum):
 
 class SecTypes(Enum):
     STOCK = "STK"
+    CASH = "CASH"
 
 
 class Currencies(Enum):
-    USD = "USD",
+    USD = "USD"
     ILS = "ILS"
 
 

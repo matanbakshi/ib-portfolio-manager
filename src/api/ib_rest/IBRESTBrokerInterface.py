@@ -26,12 +26,14 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         self._connection_attempts = 0
         self._launch_and_validate_ib_gateway()
 
-    def _launch_and_validate_ib_gateway(self, retry=False):
+    def _launch_and_validate_ib_gateway(self, retry=False, relaunch=False):
         # _launcher.launch_ib_gateway_and_auth(retry_auth=self._connection_attempts > 1)
         self._connection_attempts += 1
 
         if not retry:
             _launcher.launch_ib_gateway_and_auth()
+        elif relaunch:
+            _launcher.relaunch()
         else:
             res = requests.post(f"{API_URL}/iserver/reauthenticate", verify=False)
             L.debug(res.content)
@@ -44,6 +46,15 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
 
     def _validate_gateway_auth(self):
         # Validate if authentication was successful
+        if not self._check_auth_status():
+            if self._connection_attempts < AUTH_RETRY_THRESHOLD:
+                L.error(
+                    f"AUTH status validation failed, trying to relaunch gateway (attempt #{self._connection_attempts})")
+                sleep(2)
+                self._launch_and_validate_ib_gateway(relaunch=True)
+            else:
+                raise SystemError("AUTH status validation failed after reaching a threshold.")
+
         try:
             balance = self.request_cash_balance()
             assert balance is not float
@@ -68,11 +79,16 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         res = requests.get(f"{API_URL}/portfolio/accounts", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
         L.debug(res.content)
         sleep(.5)
-        res = requests.get(f"{API_URL}/iserver/auth/status", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
-        L.debug(res.content)
-        sleep(.5)
         res = requests.get(f"{API_URL}/iserver/accounts", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
         L.debug(res.content)
+
+    def _check_auth_status(self):
+        res = requests.get(f"{API_URL}/iserver/auth/status", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        status_content = json.loads(res.content)
+
+        L.debug(f"AUTH status: {status_content}")
+
+        return status_content["authenticated"] and status_content["connected"] and not status_content["competing"]
 
     def place_single_order(self, contract_id: int, symbol: str, quantity: float, order_type: OrderTypes,
                            action: OrderActions,

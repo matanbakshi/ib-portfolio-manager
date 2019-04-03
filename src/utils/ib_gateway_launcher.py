@@ -25,6 +25,20 @@ def launch_ib_gateway_and_auth():
     _automate_auth()
 
 
+def relaunch():
+    _kill_gateway_process()
+
+    launch_ib_gateway_and_auth()
+
+
+def _kill_gateway_process():
+    kill_cmd = "kill -9 $(netstat -ltnp 2>/dev/null | grep 0.0.0.0:5000 | awk '{print $7}' | cut -d \"/\" -f 1)"
+
+    proc = subprocess.run(kill_cmd, stdout=subprocess.PIPE)
+
+    logger.info(f"Run command output: {proc.stdout.readline()}")
+
+
 def _open_gateway_process():
     p = subprocess.Popen([GATEWAY_RUN_PATH, GATEWAY_CONF_ATH], cwd=GATEWAY_WORKDIR_PATH,
                          stdout=subprocess.PIPE)
