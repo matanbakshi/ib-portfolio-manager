@@ -10,7 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from src.logger import logger
 from src.utils.config_loader import creds_conf
 
-from src.utils.mfa_sms_receiver import wait_for_ib_auth_code
+from src.utils.mfa_sms_receiver import MFASMSReceiver
 
 LOGIN_SUCCEEDS_PHRASE = "Client login succeeds"
 GATEWAY_RUNNING_PHRASE = "Open https://localhost:5000 to login"
@@ -21,11 +21,11 @@ TIMEOUT_SECONDS = 10
 
 
 def launch_ib_gateway_and_auth():
-    open_gateway_process()
+    _open_gateway_process()
     _automate_auth()
 
 
-def open_gateway_process():
+def _open_gateway_process():
     p = subprocess.Popen([GATEWAY_RUN_PATH, GATEWAY_CONF_ATH], cwd=GATEWAY_WORKDIR_PATH,
                          stdout=subprocess.PIPE)
 
@@ -51,9 +51,15 @@ def open_gateway_process():
 
 
 def _automate_auth():
-    user_name, password, is_live = creds_conf["ib_user_name"], creds_conf["ib_password"], creds_conf["is_live_account"]
+    user_name, password, is_live = creds_conf["ib_user_name"], creds_conf["ib_password"], creds_conf[
+        "is_live_account"]
 
-    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'], service_log_path="/tmp/phantom_logs.log")
+    sms_receiver = MFASMSReceiver(60)
+    if is_live:
+        sms_receiver.start_listening_for_auth_code()
+
+    driver = webdriver.PhantomJS(service_args=['--ignore-ssl-errors=true'],
+                                 service_log_path="/tmp/phantom_logs.log")
     driver.get("https://localhost:5000")
 
     un_box = driver.find_element_by_id("user_name")
@@ -75,18 +81,18 @@ def _automate_auth():
             driver.quit()
             raise
 
-        auth_code = wait_for_ib_auth_code(TIMEOUT_SECONDS)
-
+        auth_code = sms_receiver.auth_code
         if auth_code is not None:
             sec_code_box = driver.find_element_by_id(SECURITY_CODE_BOX_ID)
             sec_code_box.send_keys(auth_code)
 
+            submit_btn = driver.find_element_by_id("submitForm")
             submit_btn.click()
         else:
             raise SystemError("IB auth code for MFA was not received")
 
     try:
-        WebDriverWait(driver, 3).until(
+        WebDriverWait(driver, 10).until(
             EC.text_to_be_present_in_element((By.CSS_SELECTOR, "pre"), LOGIN_SUCCEEDS_PHRASE))
     except TimeoutException:
         logger.error(f"Login to IB failed, success page loading timed out, page source: {driver.page_source}")

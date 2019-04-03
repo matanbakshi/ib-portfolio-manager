@@ -6,7 +6,7 @@ import requests
 
 from src.api.BaseMarketDataInterface import BaseMarketDataInterface
 from src.api.types import Exchanges, MarketData
-from src.api.ib_rest.IBRESTBrokerInterface import API_URL, IB_ACC_ID, REQUESTS_TIMEOUT_SEC
+from src.api.ib_rest.IBRESTBrokerInterface import API_URL, REQUESTS_TIMEOUT_SEC
 from src.logger import logger
 
 # IEX_TOKEN = "sk_7c26fe796d21446badbda3e5684d3e01"
@@ -76,6 +76,9 @@ class IBMarketDataInterface(BaseMarketDataInterface):
 
         if md_result:
             for data in md_result:
+                if data == "error":
+                    # 'Please query /accounts first' TODO: Handle this
+                    return False
                 if not any(elem in data.keys() for elem in items_to_validate):
                     return False
             return True

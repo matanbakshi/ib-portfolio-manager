@@ -1,65 +1,71 @@
-from asyncio import sleep
-from time import time
-
+from threading import Thread
+from time import time, sleep
+from src.logger import logger
 from websocket import create_connection
 import json
 from src.utils.config_loader import creds_conf
 
 PUSHBULLET_STREAM = f"wss://stream.pushbullet.com/websocket/{creds_conf['pushbullet_access_token']}"
-# IB_SMS_NUMBER = "+41417269500"
-IB_SMS_NUMBER = "+972544891512"
+IB_SMS_NUMBER = "+41417269500"
+# IB_SMS_NUMBER = "+972544891512"
 
 
-def wait_for_ib_auth_code(timeout_sec):
-    res = _receive_pb_msgs(timeout_sec)
-    code = None
-    if res is not None:
-        code = res.split(": ")[0]
-    return code
+class MFASMSReceiver:
+    def __init__(self, timeout):
+        self._timeout = timeout
+        self._receiver_thread = Thread(target=self._receive_pb_msgs)
+        self._received_auth_code = None
+        self._timeout_reached = False
 
+    def start_listening_for_auth_code(self):
+        self._receiver_thread.start()
 
-def wait_for_ib_auth_message(timeout_sec):
-    return _receive_pb_msgs(timeout_sec)
+        sleep(3)
 
+    @property
+    def auth_code(self):
+        if self._received_auth_code is None and not self._timeout_reached:
+            self._receiver_thread.join()
 
-def _receive_pb_msgs(timeout_sec):
-    start_time = time()
-    current_time = start_time
-    text = None
+        return self._received_auth_code
 
-    ws = create_connection(PUSHBULLET_STREAM, timeout=10)
+    def _receive_pb_msgs(self):
+        start_time = time()
+        current_time = start_time
+        text = None
 
-    try:
-        while current_time - start_time <= timeout_sec:
-            data = ws.recv()
-            msg = json.loads(data)
-            if _is_ib_sms_msg(msg):
-                text = _extract_sms_body_from_msg(msg)
-                break
+        ws = create_connection(PUSHBULLET_STREAM, timeout=self._timeout)
 
-            sleep(.1)
-            current_time = time()
-    finally:
-        ws.close()
+        try:
+            while current_time - start_time <= self._timeout:
+                data = ws.recv()
+                msg = json.loads(data)
+                if self._is_ib_sms_msg(msg):
+                    text = self._extract_auth_code_from_msg(msg)
+                    self._received_auth_code = text
+                    break
 
-    return text
+                sleep(.1)
+                current_time = time()
+        finally:
+            ws.close()
+        return text
 
+    @staticmethod
+    def _extract_auth_code_from_msg(msg):
+        body = msg["push"]["notifications"][0]["body"]
+        code = body.split(": ")[1]
 
-def _extract_sms_body_from_msg(msg):
-    return msg["push"]["notifications"][0]["body"]
+        return code
 
-
-def _is_ib_sms_msg(msg):
-    if msg["type"] == "push":
-        if msg["push"]["type"] == "sms_changed":
-            if msg["push"]["notifications"][0]["title"] == IB_SMS_NUMBER:
-                return True
-    return False
+    @staticmethod
+    def _is_ib_sms_msg(msg):
+        if msg["type"] == "push":
+            if msg["push"]["type"] == "sms_changed":
+                if msg["push"]["notifications"][0]["title"] == IB_SMS_NUMBER:
+                    return True
+        return False
 
 
 if __name__ == "__main__":
-    s = time()
-    msg = wait_for_ib_auth_message(10)
-    e = time()
-    print(msg)
-    print(e - s)
+    r = MFASMSReceiver(30)

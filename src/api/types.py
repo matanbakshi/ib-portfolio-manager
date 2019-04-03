@@ -25,7 +25,8 @@ class SecTypes(Enum):
 
 
 class Currencies(Enum):
-    USD = "USD"
+    USD = "USD",
+    ILS = "ILS"
 
 
 class OrderState(Enum):

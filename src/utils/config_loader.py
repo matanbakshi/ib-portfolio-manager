@@ -1,6 +1,6 @@
 import json
 
-CREDS_FILE_PATH = "config/creds.json"
+CREDS_FILE_PATH = "config/creds_live.json"
 
 
 def read_config():

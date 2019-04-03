@@ -1,5 +1,4 @@
 from time import sleep
-
 from src.api.BaseBrokerInterface import BaseBrokerInterface
 from src.api.types import OrderTypes, OrderActions, SecTypes, Currencies, Exchanges, OrderState, PositionData
 import requests
@@ -7,11 +6,11 @@ import json
 from datetime import datetime
 from src.logger import logger as L
 import sys
+from src.utils.config_loader import creds_conf
 
 import src.utils.ib_gateway_launcher as _launcher
 
-IB_ACC_ID = "DU1162858"
-API_URL = "https://localhost:5000/alpha/portal"
+API_URL = "https://localhost:5000/v1/portal"
 CURRENCY_FOR_CASH = "USD"  # Can also be 'BASE' or other currency.
 IB_SMART_ROUTING = "SMART"
 
@@ -23,8 +22,8 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
     def __init__(self):
         super().__init__()
 
+        self._ib_acc_id = creds_conf["account_id"]
         self._connection_attempts = 0
-
         self._launch_and_validate_ib_gateway()
 
     def _launch_and_validate_ib_gateway(self, retry=False):
@@ -83,7 +82,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         L.info(f"Trying to order: {symbol}")
 
         payload = {
-            "acctId": IB_ACC_ID,
+            "acctId": self._ib_acc_id,
             "conid": contract_id,
             "secType": f"{contract_id}:{sec_type.value}",  # should include conid (xxx:STK)
             "cOID": f"{symbol}-{datetime.now().strftime('%d-%m-%Y-%H-%M-%S')}",  # Custom string
@@ -100,7 +99,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         if order_type is OrderTypes.LIMIT:  # No support for 'STOP' type
             payload["price"] = limit_price
 
-        jres = requests.post(f"{API_URL}/iserver/account/{IB_ACC_ID}/order", json=payload, verify=False,
+        jres = requests.post(f"{API_URL}/iserver/account/{self._ib_acc_id}/order", json=payload, verify=False,
                              timeout=REQUESTS_TIMEOUT_SEC)
         res_content = json.loads(jres.content)
 
@@ -127,7 +126,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
     def request_all_holdings(self):
         pageId = 0  # Paginated result. Shows the first 30 positions.
 
-        jres = requests.get(f"{API_URL}/portfolio/{IB_ACC_ID}/positions/{pageId}", verify=False,
+        jres = requests.get(f"{API_URL}/portfolio/{self._ib_acc_id}/positions/{pageId}", verify=False,
                             timeout=REQUESTS_TIMEOUT_SEC)
         payload = json.loads(jres.content)
 
@@ -140,7 +139,7 @@ class IBRESTBrokerInterface(BaseBrokerInterface):
         return positions
 
     def request_cash_balance(self) -> float:
-        res = requests.get(f"{API_URL}/portfolio/{IB_ACC_ID}/ledger", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
+        res = requests.get(f"{API_URL}/portfolio/{self._ib_acc_id}/ledger", verify=False, timeout=REQUESTS_TIMEOUT_SEC)
         jres = json.loads(res.content)
 
         cash_balance = jres[CURRENCY_FOR_CASH]["cashbalance"]
