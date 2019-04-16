@@ -1,1 +1,5 @@
 requests
+#pandas-market-calendars
+selenium==2.52.0
+#boto3
+websocket-client==0.56.0

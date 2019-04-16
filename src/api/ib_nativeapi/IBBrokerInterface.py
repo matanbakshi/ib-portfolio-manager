@@ -1,5 +1,5 @@
 from threading import Thread, Event
-from src.tools.sync_helpers import wait_for_all_events
+from src.utils.sync_helpers import wait_for_all_events
 from typing import List
 from ibapi.account_summary_tags import AccountSummaryTags
 
@@ -8,6 +8,9 @@ from src.api.BaseBrokerInterface import BaseBrokerInterface
 from src.api.ib_nativeapi.ib_entities_factory import *
 from src.api.ib_nativeapi.ib_app_objects import IBApp
 from src.api.ib_nativeapi.IBEventsHandler import IBEventsHandler
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 CONSTANT_ID = 9008
 
