@@ -1,3 +1,4 @@
+change:
 fetch-dependencies:
 	mkdir -p bin/
 
